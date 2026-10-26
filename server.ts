@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
@@ -226,20 +227,49 @@ Return JSON matching:
 });
 
 // Server configuration & static serving
+// Health check routes for Cloud Run liveness/readiness probes
+app.get('/healthz', (_req, res) => {
+  res.status(200).send('OK');
+});
+
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'healthy', service: 'HostMate' });
+});
+
+// Server configuration & static serving
 async function startServer() {
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'dist')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  const distPath = path.join(__dirname, 'dist');
+  const hasDist = fs.existsSync(path.join(distPath, 'index.html'));
+  // In production (Cloud Run), APP_ENV is undefined and dist bundle exists.
+  // In development, npm run dev sets APP_ENV=development.
+  const isDev = process.env.APP_ENV === 'development' || !hasDist;
+
+  if (!isDev) {
+    // Production mode (Cloud Run or deployed container)
+    console.log('Starting HostMate in production mode serving static dist bundle');
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
     });
   } else {
-    // Mount Vite dev server middleware
-    const { createServer } = await import('vite');
-    const vite = await createServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
+    // Development mode with hot-module reloading
+    console.log('Starting HostMate in development mode with Vite middleware');
+    try {
+      const { createServer } = await import('vite');
+      const vite = await createServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } catch (err) {
+      console.warn('Vite dev middleware failed, falling back to dist bundle if available:', err);
+      if (hasDist) {
+        app.use(express.static(distPath));
+        app.get('*', (_req, res) => {
+          res.sendFile(path.join(distPath, 'index.html'));
+        });
+      }
+    }
   }
 
   app.listen(PORT, '0.0.0.0', () => {

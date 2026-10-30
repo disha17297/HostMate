@@ -73,14 +73,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* LINE 2: Bigger button for reconfigure event below name & tagline + rest of all options below */}
+        {/* LINE 2: Bigger button for plan event below name & tagline + rest of all options below */}
         <div className="py-2.5 sm:py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Left section: Bigger Reconfigure Event Button placed directly below name & tagline */}
+          {/* Left section: Bigger Plan Event Button placed directly below name & tagline */}
           <div className="flex items-center gap-2.5 flex-wrap shrink-0">
             <button
               onClick={onOpenWizard}
               className="flex items-center gap-2.5 px-5 py-2.5 sm:px-6 sm:py-3 text-sm font-bold text-white bg-[#1A1D20] hover:bg-[#2A2F35] active:scale-[0.98] rounded-xl shadow-sm border border-[#D4AF37]/60 hover:border-[#D4AF37] transition-all cursor-pointer group shrink-0"
-              title="Reconfigure event details, dates, guest counts and budget caps"
+              title="Plan event details, dates, guest counts and budget caps"
             >
               <Sparkles className="w-4 h-4 text-[#D4AF37] group-hover:rotate-12 transition-transform" />
               <span className="tracking-wide text-xs sm:text-sm">{t.wizard.reconfigureBtn}</span>

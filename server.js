@@ -208,7 +208,7 @@ app.get("/api/health", (_req, res) => {
 async function startServer() {
   const distPath = path.join(__dirname, "dist");
   const hasDist = fs.existsSync(path.join(distPath, "index.html"));
-  const isDev = process.env.NODE_ENV === "development";
+  const isDev = process.env.APP_ENV === "development" || !hasDist;
   if (!isDev) {
     console.log("Starting HostMate in production mode serving static dist bundle");
     app.use(express.static(distPath));

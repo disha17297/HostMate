@@ -52,7 +52,8 @@ export const TRANSLATIONS = {
       budgetLabel: 'Total Budget Limit',
       guestCountLabel: 'Expected Guest Count',
       submitBtn: 'Generate Workspace & Preset Caps',
-      reconfigureBtn: 'Reconfigure Event',
+      reconfigureBtn: 'Plan Event',
+      planEventBtn: 'Plan Event',
     },
     budget: {
       title: 'Core Budget Tracker',
@@ -216,7 +217,8 @@ export const TRANSLATIONS = {
       budgetLabel: 'कुल बजट सीमा',
       guestCountLabel: 'अपेक्षित मेहमान संख्या',
       submitBtn: 'वर्कस्पेस व बजट विभाजन बनाएं',
-      reconfigureBtn: 'इवेंट कॉन्फ़िगर करें',
+      reconfigureBtn: 'इवेंट प्लान करें',
+      planEventBtn: 'इवेंट प्लान करें',
     },
     budget: {
       title: 'कोर बजट ट्रैकर',

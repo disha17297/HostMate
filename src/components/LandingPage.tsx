@@ -20,7 +20,8 @@ import {
   X,
   Clock,
   ShieldCheck,
-  Star
+  Star,
+  FileCheck
 } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
@@ -32,6 +33,7 @@ interface LandingPageProps {
   onToggleTheme: () => void;
   onOpenPlanner: (tab?: string) => void;
   onPlanEvent: () => void;
+  onOpenTests?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -41,6 +43,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onToggleTheme,
   onOpenPlanner,
   onPlanEvent,
+  onOpenTests,
 }) => {
   const t = TRANSLATIONS[lang];
   const [servicesExpanded, setServicesExpanded] = useState(false);
@@ -830,8 +833,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="text-[#b49a45]">English & हिन्दी</span>
+              {onOpenTests && (
+                <>
+                  <span>•</span>
+                  <button onClick={onOpenTests} className="hover:text-[#b49a45] cursor-pointer flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                    <FileCheck className="w-3.5 h-3.5 text-[#1c5340]" />
+                    <span>Test Suite</span>
+                  </button>
+                </>
+              )}
               <span>•</span>
-              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white">
+              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white cursor-pointer">
                 Back to Top ↑
               </button>
             </div>

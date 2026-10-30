@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Sparkles, Plus, Globe, ChevronDown, Sun, Moon, ArrowLeft } from 'lucide-react';
+import { Calendar, Sparkles, Plus, Globe, ChevronDown, Sun, Moon, ArrowLeft, FileCheck } from 'lucide-react';
 import { Language, EventData } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 
@@ -15,6 +15,7 @@ interface HeaderProps {
   onSelectEvent: (eventId: string) => void;
   onOpenWizard: () => void;
   onGoToLanding: () => void;
+  onOpenTests: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectEvent,
   onOpenWizard,
   onGoToLanding,
+  onOpenTests,
 }) => {
   const t = TRANSLATIONS[lang];
   const [showEventDropdown, setShowEventDropdown] = useState(false);
@@ -76,6 +78,16 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <ArrowLeft className="w-3.5 h-3.5 text-[#b49a45]" />
               <span className="hidden sm:inline">{t.landing.backToHome}</span>
+            </button>
+
+            {/* Test Suite Button */}
+            <button
+              onClick={onOpenTests}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--bg-app)] text-[var(--ink)] transition-all shadow-2xs hover:border-[#1c5340] cursor-pointer"
+              title="Run Automated Test Cases"
+            >
+              <FileCheck className="w-3.5 h-3.5 text-[#1c5340]" />
+              <span className="hidden md:inline">Test Suite</span>
             </button>
 
             {/* Dark / Light Theme Toggle */}

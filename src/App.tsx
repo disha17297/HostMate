@@ -8,6 +8,7 @@ import { RsvpDashboard } from './components/RsvpDashboard';
 import { RsvpPublicView } from './components/RsvpPublicView';
 import { VendorHub } from './components/VendorHub';
 import { AiAdviceModal } from './components/AiAdviceModal';
+import { TestSuiteModal } from './components/TestSuiteModal';
 import { EventData, Language, Vendor, GuestRsvp } from './types';
 import { TRANSLATIONS } from './data/translations';
 import { 
@@ -59,6 +60,7 @@ export default function App() {
   // Modals state
   const [showWizard, setShowWizard] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
+  const [showTestSuite, setShowTestSuite] = useState(false);
   const [aiModalTab, setAiModalTab] = useState<'budget' | 'ideas' | 'vendor'>('budget');
   const [selectedVendorForAi, setSelectedVendorForAi] = useState<Vendor | null>(null);
 
@@ -185,6 +187,7 @@ export default function App() {
           onPlanEvent={() => {
             setShowWizard(true);
           }}
+          onOpenTests={() => setShowTestSuite(true)}
         />
 
         {/* Smart Setup Wizard Modal directly accessible from Landing */}
@@ -194,6 +197,13 @@ export default function App() {
           lang={lang}
           onComplete={handleWizardComplete}
           existingEvent={activeEvent}
+        />
+
+        {/* Test Suite Modal */}
+        <TestSuiteModal
+          isOpen={showTestSuite}
+          onClose={() => setShowTestSuite(false)}
+          lang={lang}
         />
       </>
     );
@@ -215,6 +225,7 @@ export default function App() {
         onSelectEvent={handleSelectEvent}
         onOpenWizard={() => setShowWizard(true)}
         onGoToLanding={() => handleSwitchView('landing')}
+        onOpenTests={() => setShowTestSuite(true)}
       />
 
       {/* Main Workspace Body */}
@@ -400,6 +411,13 @@ export default function App() {
           selectedVendor={selectedVendorForAi}
         />
       )}
+
+      {/* Test Suite Modal */}
+      <TestSuiteModal
+        isOpen={showTestSuite}
+        onClose={() => setShowTestSuite(false)}
+        lang={lang}
+      />
     </div>
   );
 }

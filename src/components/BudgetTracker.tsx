@@ -9,7 +9,9 @@ import {
   Calendar,
   Wallet,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  ShieldCheck,
+  X
 } from 'lucide-react';
 import { BudgetCategory, EventData, Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
@@ -40,19 +42,16 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
 
   const spentPercentage = Math.round((totalActual / totalBudget) * 100);
 
-  // Status helper
-  let progressColor = 'bg-emerald-500';
-  let statusText = t.budget.budgetStatusSafe;
-  let statusBg = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+  // Status helper according to Section 5.3
+  let statusText = lang === 'hi' ? 'बजट में (On Track)' : 'On Track';
+  let statusBadgeClass = 'bg-emerald-900/60 text-emerald-300 border-emerald-500/40';
 
   if (spentPercentage > 100) {
-    progressColor = 'bg-rose-500';
-    statusText = `${t.budget.budgetStatusDanger} (${spentPercentage}%)`;
-    statusBg = 'text-rose-700 bg-rose-50 border-rose-200';
+    statusText = lang === 'hi' ? `बजट से अधिक (${spentPercentage}%)` : `Over Budget (${spentPercentage}%)`;
+    statusBadgeClass = 'bg-rose-900/60 text-rose-300 border-rose-500/40';
   } else if (spentPercentage >= 85) {
-    progressColor = 'bg-amber-500';
-    statusText = `${t.budget.budgetStatusWarning} (${spentPercentage}%)`;
-    statusBg = 'text-amber-700 bg-amber-50 border-amber-200';
+    statusText = lang === 'hi' ? `सीमा के निकट (${spentPercentage}%)` : `Approaching Limit (${spentPercentage}%)`;
+    statusBadgeClass = 'bg-amber-900/60 text-amber-300 border-amber-500/40';
   }
 
   // Adding new item state
@@ -110,137 +109,167 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
     onUpdateEvent({ ...event, budgetItems: updated });
   };
 
+  // Circular gauge math (180px gauge, r=70, circumference=439.82)
+  const radius = 70;
+  const circumference = 2 * Math.PI * radius;
+  const safePct = Math.min(100, Math.max(0, spentPercentage));
+  const strokeOffset = circumference - (safePct / 100) * circumference;
+
   return (
     <div className="space-y-6">
-      {/* High-Contrast Header Banner (Royal Charcoal #1A1D20 + Champagne Gold #D4AF37 + Emerald #1B4332) */}
-      <div className="bg-[#1A1D20] text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-[#D4AF37]/30 relative overflow-hidden">
+      {/* 5.3 BUDGET VAULT: Dark Emerald Panel (#12392d to #0c2a21 gradient, 1px gold border, radius 28px) */}
+      <div className="bg-gradient-to-br from-[#12392d] via-[#103429] to-[#0c2a21] text-white rounded-[28px] p-6 sm:p-8 shadow-xl border border-[#b78f3b]/60 relative overflow-hidden">
         {/* Subtle decorative gold ambient glow */}
-        <div className="absolute -top-24 -right-24 w-80 h-80 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-[#b78f3b]/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10">
+          {/* Header Row of Vault */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <div className="flex items-center gap-2.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">
-                  {lang === 'hi' ? 'वित्तीय डैशबोर्ड' : 'HostMate Financial Vault'}
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#ffd97d]">
+                  {lang === 'hi' ? 'होस्टमेट वित्तीय वॉल्ट' : 'HostMate Budget Vault'}
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                  spentPercentage > 100 
-                    ? 'bg-rose-900/60 text-rose-300 border border-rose-500/40' 
-                    : spentPercentage >= 85 
-                    ? 'bg-amber-900/60 text-amber-300 border border-amber-500/40' 
-                    : 'bg-[#1B4332] text-emerald-200 border border-emerald-500/30'
-                }`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusBadgeClass}`}>
                   {statusText}
                 </span>
               </div>
               <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-white mt-1">
                 {t.budget.title}
               </h2>
-              <p className="text-xs text-slate-400 mt-1">{t.budget.subtitle}</p>
+              <p className="text-xs text-slate-300 mt-1">{t.budget.subtitle}</p>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            {/* Action buttons on Vault */}
+            <div className="flex items-center gap-2.5 flex-wrap">
               <button
                 onClick={onOpenAiBudgetModal}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-[#D4AF37] bg-white/10 hover:bg-white/15 rounded-xl transition-all border border-[#D4AF37]/40 shadow-sm"
+                className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-[#ffd97d] hover:text-white bg-white/10 hover:bg-white/15 rounded-xl transition-all border border-[#ffd97d]/40 shadow-sm cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                <Sparkles className="w-4 h-4 text-[#ffd97d]" />
                 <span>{t.budget.getAiAdvice}</span>
               </button>
 
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-[#1A1D20] bg-[#D4AF37] hover:bg-[#E5C768] rounded-xl transition-all shadow-md active:scale-[0.99]"
+                className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-[#12100d] bg-[#ffd97d] hover:bg-[#ffe094] rounded-xl transition-all shadow-md active:scale-[0.98] cursor-pointer"
               >
-                <Plus className="w-4 h-4 text-[#1A1D20]" />
+                <Plus className="w-4 h-4 text-[#12100d]" />
                 <span>{t.budget.addItem}</span>
               </button>
             </div>
           </div>
 
-          {/* Budget Consumption Bar */}
-          <div className="space-y-2.5 bg-black/25 p-4 rounded-2xl border border-white/10 backdrop-blur-xs">
-            <div className="flex items-center justify-between text-xs font-medium text-slate-300">
-              <span className="flex items-center gap-2">
-                <span>{lang === 'hi' ? 'कुल खर्च बनाम बजट सीमा' : 'Total Spent vs Budget Cap'}:</span>
-                <strong className="text-white font-mono tabular-nums text-sm font-bold">
+          {/* Core Row: 180px Circular Gauge + 4 Financial KPI Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pt-2">
+            {/* 180px Circular Gauge (Col 1-4 on lg) */}
+            <div className="lg:col-span-4 flex flex-col items-center justify-center p-5 rounded-2xl bg-black/25 border border-white/10 backdrop-blur-xs">
+              <div className="relative w-[180px] h-[180px] flex items-center justify-center">
+                <svg className="w-[180px] h-[180px] -rotate-90 transform" viewBox="0 0 180 180">
+                  {/* Background Track */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r={radius}
+                    stroke="rgba(255, 255, 255, 0.12)"
+                    strokeWidth="12"
+                    fill="transparent"
+                  />
+                  {/* Animated Gold Arc */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r={radius}
+                    stroke={spentPercentage > 100 ? '#f43f5e' : spentPercentage >= 85 ? '#f59e0b' : '#ffd97d'}
+                    strokeWidth="12"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeOffset}
+                    strokeLinecap="round"
+                    fill="transparent"
+                    className="transition-all duration-700 ease-out"
+                  />
+                </svg>
+
+                {/* Center Percentage Display */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="font-mono tabular-nums text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                    {spentPercentage}%
+                  </span>
+                  <span className="text-[10px] uppercase font-bold text-[#ffd97d] tracking-wider mt-0.5">
+                    {spentPercentage > 100 ? 'Over Limit' : 'Budget Used'}
+                  </span>
+                  <span className="text-[10px] text-slate-300 font-mono mt-0.5">
+                    of {formatCurrency(totalBudget, currency)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 text-center">
+                <div className="text-xs font-semibold text-slate-200">
+                  {lang === 'hi' ? 'कुल वास्तविक खर्च' : 'Total Committed Spend'}
+                </div>
+                <div className="text-sm font-mono font-bold text-[#ffd97d]">
                   {formatCurrency(totalActual, currency)}
-                </strong>
-                <span className="text-slate-400 font-mono text-[11px]">
-                  / {formatCurrency(totalBudget, currency)}
-                </span>
-              </span>
-              <span className="font-mono tabular-nums font-bold text-[#D4AF37] text-sm">
-                {spentPercentage}%
-              </span>
-            </div>
-
-            <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/10">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  spentPercentage > 100 
-                    ? 'bg-rose-500' 
-                    : spentPercentage >= 85 
-                    ? 'bg-amber-400' 
-                    : 'bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB]'
-                }`}
-                style={{ width: `${Math.min(100, spentPercentage)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* 4 Financial Ledger Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mt-5">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                <span>{t.budget.totalBudget}</span>
-                <Wallet className="w-3.5 h-3.5 text-[#D4AF37]" />
-              </div>
-              <div className="text-xl font-bold font-mono tabular-nums text-white mt-1">
-                {formatCurrency(totalBudget, currency)}
-              </div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                {event.guestCount} {t.common.guests} · {currency}{Math.round(totalBudget / (event.guestCount || 1))}/pax
+                </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                <span>{t.budget.totalSpent}</span>
-                <TrendingUp className="w-3.5 h-3.5 text-[#D4AF37]" />
+            {/* 4 KPI Cards (Col 5-12 on lg) */}
+            <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Card 1: Total Budget */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#ffd97d]/40 transition-colors">
+                <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center justify-between">
+                  <span>{t.budget.totalBudget}</span>
+                  <Wallet className="w-4 h-4 text-[#ffd97d]" />
+                </div>
+                <div className="text-2xl font-bold font-mono tabular-nums text-white mt-1.5">
+                  {formatCurrency(totalBudget, currency)}
+                </div>
+                <div className="text-[11px] text-slate-300 mt-1">
+                  {event.guestCount} {t.common.guests} · {currency}{Math.round(totalBudget / (event.guestCount || 1))}/guest
+                </div>
               </div>
-              <div className={`text-xl font-bold font-mono tabular-nums mt-1 ${spentPercentage > 100 ? 'text-rose-400' : 'text-white'}`}>
-                {formatCurrency(totalActual, currency)}
-              </div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                Est: {formatCurrency(totalEstimated, currency)}
-              </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                <span>{t.budget.totalAdvance}</span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              {/* Card 2: Actual Spent */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#ffd97d]/40 transition-colors">
+                <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center justify-between">
+                  <span>{t.budget.totalSpent}</span>
+                  <TrendingUp className="w-4 h-4 text-[#ffd97d]" />
+                </div>
+                <div className={`text-2xl font-bold font-mono tabular-nums mt-1.5 ${spentPercentage > 100 ? 'text-rose-400' : 'text-white'}`}>
+                  {formatCurrency(totalActual, currency)}
+                </div>
+                <div className="text-[11px] text-slate-300 mt-1">
+                  Est: {formatCurrency(totalEstimated, currency)} ({Math.round((totalEstimated / totalBudget) * 100)}% est)
+                </div>
               </div>
-              <div className="text-xl font-bold font-mono tabular-nums text-emerald-300 mt-1">
-                {formatCurrency(totalAdvance, currency)}
-              </div>
-              <div className="text-[11px] text-emerald-400/80 mt-0.5">
-                {totalActual > 0 ? `${Math.round((totalAdvance / totalActual) * 100)}% settled` : 'No advance recorded'}
-              </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                <span>{t.budget.balanceDue}</span>
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
+              {/* Card 3: Advance Deposits */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#ffd97d]/40 transition-colors">
+                <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center justify-between">
+                  <span>{t.budget.totalAdvance}</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="text-2xl font-bold font-mono tabular-nums text-emerald-300 mt-1.5">
+                  {formatCurrency(totalAdvance, currency)}
+                </div>
+                <div className="text-[11px] text-emerald-300/80 mt-1">
+                  {totalActual > 0 ? `${Math.round((totalAdvance / totalActual) * 100)}% paid so far` : 'No payments yet'}
+                </div>
               </div>
-              <div className="text-xl font-bold font-mono tabular-nums text-[#F3E5AB] mt-1">
-                {formatCurrency(totalBalanceDue, currency)}
-              </div>
-              <div className="text-[11px] text-amber-300/80 mt-0.5">
-                {lang === 'hi' ? 'वेंडर्स को देय शेष' : 'Due on or before event'}
+
+              {/* Card 4: Balance Remaining Due */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#ffd97d]/40 transition-colors">
+                <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center justify-between">
+                  <span>{t.budget.balanceDue}</span>
+                  <Clock className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="text-2xl font-bold font-mono tabular-nums text-[#ffd97d] mt-1.5">
+                  {formatCurrency(totalBalanceDue, currency)}
+                </div>
+                <div className="text-[11px] text-amber-300/80 mt-1">
+                  {lang === 'hi' ? 'वेंडर्स को देय शेष राशि' : 'Outstanding vendor balances'}
+                </div>
               </div>
             </div>
           </div>
@@ -248,9 +277,9 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
       </div>
 
       {/* Preset Split Info Tip */}
-      <div className="text-xs text-[#7A6B43] bg-[#FAF8EE] border border-[#E8DEBE] rounded-2xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+      <div className="text-xs text-[var(--ink)] bg-[var(--gold-light)] border border-[#b49a45]/30 rounded-2xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
         <span className="flex items-center gap-2">
-          <span className="text-[#D4AF37] font-bold text-base">✦</span>
+          <span className="text-[#b49a45] font-bold text-base">✦</span>
           <span>{t.budget.autoPresetTip}</span>
         </span>
         <button
@@ -264,31 +293,31 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
             });
             onUpdateEvent({ ...event, budgetItems: updated });
           }}
-          className="text-[#1A1D20] hover:text-[#9A813A] font-bold underline shrink-0 cursor-pointer"
+          className="text-[#1c5340] hover:text-[#b49a45] font-bold underline shrink-0 cursor-pointer"
         >
           {lang === 'hi' ? 'बजट कैप्स पुनः लागू करें' : 'Re-apply Cap Splits'}
         </button>
       </div>
 
-      {/* Interactive Budget Items Table */}
-      <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-[#E2E8F0] flex items-center justify-between bg-[#FAFAFD]/60">
+      {/* Itemized Category Breakdown & Payments Table */}
+      <div className="bg-[var(--surface)] rounded-3xl border border-[var(--line)] shadow-xs overflow-hidden">
+        <div className="p-5 border-b border-[var(--line)] flex items-center justify-between bg-[var(--surface-card)]">
           <div>
-            <h3 className="font-serif text-base font-bold text-[#1A1D20]">
-              {lang === 'hi' ? 'श्रेणीवार बजट विभाजन व ट्रैकिंग' : 'Itemized Category Breakdown & Payments'}
+            <h3 className="font-serif text-base font-bold text-[var(--ink)]">
+              {lang === 'hi' ? 'श्रेणीवार बजट विभाजन व भुगतान' : 'Itemized Category Breakdown & Payments'}
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-[11px] text-[var(--muted)] mt-0.5">
               {lang === 'hi' ? 'प्रत्येक श्रेणी का अनुमानित, वास्तविक और दिया गया एडवांस' : 'Manage line-item caps, actual commitments, and balance settlement dates'}
             </p>
           </div>
-          <span className="text-xs font-mono font-bold text-slate-600 bg-[#F4F1EA] px-2.5 py-1 rounded-lg">
+          <span className="text-xs font-mono font-bold text-[var(--muted)] bg-[var(--bg-app)] px-2.5 py-1 rounded-lg border border-[var(--line)]">
             {event.budgetItems.length} {lang === 'hi' ? 'मदें' : 'categories'}
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#FAF8F5] border-b border-[#E2E8F0] text-slate-700 uppercase font-bold text-[10px] tracking-wider">
+            <thead className="bg-[var(--bg-app)] border-b border-[var(--line)] text-[var(--muted)] uppercase font-bold text-[10px] tracking-wider">
               <tr>
                 <th className="py-3.5 px-5">{t.budget.category}</th>
                 <th className="py-3.5 px-3 text-center">{t.budget.recommendedSplit}</th>
@@ -297,25 +326,28 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                 <th className="py-3.5 px-3">{t.budget.advancePaid}</th>
                 <th className="py-3.5 px-3">{t.budget.balanceRemaining}</th>
                 <th className="py-3.5 px-3">{t.budget.balanceDueDate}</th>
+                <th className="py-3.5 px-3 text-center">{t.common.status}</th>
                 <th className="py-3.5 px-5 text-right">{t.common.actions}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EFEAE1]/70">
+            <tbody className="divide-y divide-[var(--line)]">
               {event.budgetItems.map((item) => {
                 const remaining = Math.max(0, (Number(item.actualCost) || 0) - (Number(item.advancePaid) || 0));
                 const itemPctOfBudget = Math.round(((Number(item.actualCost) || 0) / totalBudget) * 100);
+                const isPaidFull = Number(item.actualCost) > 0 && remaining === 0;
+                const isDepositPaid = Number(item.advancePaid) > 0 && remaining > 0;
 
                 return (
-                  <tr key={item.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                  <tr key={item.id} className="hover:bg-[var(--bg-app)]/50 transition-colors">
                     {/* Category Name */}
-                    <td className="py-3.5 px-5 font-bold text-[#1A1D20] min-w-[170px]">
+                    <td className="py-3.5 px-5 font-bold text-[var(--ink)] min-w-[170px]">
                       <div>{lang === 'hi' && item.nameHi ? item.nameHi : item.name}</div>
-                      {item.notes && <div className="text-[11px] text-slate-400 font-normal">{item.notes}</div>}
+                      {item.notes && <div className="text-[11px] text-[var(--muted)] font-normal">{item.notes}</div>}
                     </td>
 
                     {/* Cap Split % */}
-                    <td className="py-3.5 px-3 text-center font-mono tabular-nums text-slate-600 min-w-[80px]">
-                      <span className="bg-[#F8F6F1] border border-[#E2E8F0] px-2 py-0.5 rounded text-[11px] font-bold text-[#1A1D20]">
+                    <td className="py-3.5 px-3 text-center font-mono tabular-nums text-[var(--muted)] min-w-[80px]">
+                      <span className="bg-[var(--bg-app)] border border-[var(--line)] px-2 py-0.5 rounded text-[11px] font-bold text-[var(--ink)]">
                         {item.recommendedPct ? `${item.recommendedPct}%` : `${itemPctOfBudget}%`}
                       </span>
                     </td>
@@ -323,12 +355,12 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                     {/* Estimated Cost */}
                     <td className="py-3.5 px-3 min-w-[120px]">
                       <div className="flex items-center gap-1">
-                        <span className="text-slate-400 font-mono text-[11px]">{currency}</span>
+                        <span className="text-[var(--muted)] font-mono text-[11px]">{currency}</span>
                         <input
                           type="number"
                           value={item.estimatedCost || ''}
                           onChange={(e) => handleUpdateItemField(item.id, 'estimatedCost', Number(e.target.value))}
-                          className="w-24 px-2 py-1 font-mono tabular-nums text-slate-800 bg-[#FAF8F5] border border-[#E2E8F0] rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                          className="w-24 px-2 py-1 font-mono tabular-nums text-[var(--ink)] bg-[var(--surface)] border border-[var(--line)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#b49a45]"
                         />
                       </div>
                     </td>
@@ -336,12 +368,12 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                     {/* Actual Cost */}
                     <td className="py-3.5 px-3 min-w-[120px]">
                       <div className="flex items-center gap-1">
-                        <span className="text-slate-400 font-mono text-[11px]">{currency}</span>
+                        <span className="text-[var(--muted)] font-mono text-[11px]">{currency}</span>
                         <input
                           type="number"
                           value={item.actualCost || ''}
                           onChange={(e) => handleUpdateItemField(item.id, 'actualCost', Number(e.target.value))}
-                          className="w-24 px-2 py-1 font-mono tabular-nums font-bold text-[#1A1D20] bg-white border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                          className="w-24 px-2 py-1 font-mono tabular-nums font-bold text-[var(--ink)] bg-[var(--surface)] border border-[var(--line)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#b49a45]"
                         />
                       </div>
                     </td>
@@ -349,12 +381,12 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                     {/* Advance Paid */}
                     <td className="py-3.5 px-3 min-w-[120px]">
                       <div className="flex items-center gap-1">
-                        <span className="text-slate-400 font-mono text-[11px]">{currency}</span>
+                        <span className="text-[var(--muted)] font-mono text-[11px]">{currency}</span>
                         <input
                           type="number"
                           value={item.advancePaid || ''}
                           onChange={(e) => handleUpdateItemField(item.id, 'advancePaid', Number(e.target.value))}
-                          className="w-24 px-2 py-1 font-mono tabular-nums text-[#1B4332] font-semibold bg-[#EBF5F0]/50 border border-[#CDE5D8] rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#1B4332]"
+                          className="w-24 px-2 py-1 font-mono tabular-nums text-[#1c5340] font-semibold bg-[var(--surface)] border border-[var(--line)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1c5340]"
                         />
                       </div>
                     </td>
@@ -362,12 +394,12 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                     {/* Balance Left */}
                     <td className="py-3.5 px-3 font-mono tabular-nums font-bold min-w-[110px]">
                       {remaining === 0 ? (
-                        <span className="text-[#1B4332] flex items-center gap-1 text-[11px] font-semibold">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#1B4332]" />
-                          <span>{lang === 'hi' ? 'पूर्ण भुगतान' : 'Paid'}</span>
+                        <span className="text-[#1c5340] flex items-center gap-1 text-[11px] font-semibold">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#1c5340]" />
+                          <span>{lang === 'hi' ? 'पूर्ण' : 'Paid'}</span>
                         </span>
                       ) : (
-                        <span className="text-[#9A813A]">{formatCurrency(remaining, currency)}</span>
+                        <span className="text-[#b49a45]">{formatCurrency(remaining, currency)}</span>
                       )}
                     </td>
 
@@ -377,15 +409,32 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                         type="date"
                         value={item.dueDate || ''}
                         onChange={(e) => handleUpdateItemField(item.id, 'dueDate', e.target.value)}
-                        className="px-2 py-1 text-[11px] font-mono text-slate-700 border border-[#E2E8F0] rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                        className="px-2 py-1 text-[11px] font-mono text-[var(--ink)] border border-[var(--line)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-1 focus:ring-[#b49a45]"
                       />
+                    </td>
+
+                    {/* Status Chip (Paid in Full vs Deposit Paid vs Pending) */}
+                    <td className="py-3.5 px-3 text-center min-w-[110px]">
+                      {isPaidFull ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1c5340]/15 text-[#1c5340] border border-[#1c5340]/30">
+                          {lang === 'hi' ? 'पूर्ण भुगतान' : 'Paid in Full'}
+                        </span>
+                      ) : isDepositPaid ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#b49a45]/20 text-[#8a7226] border border-[#b49a45]/40">
+                          {lang === 'hi' ? 'एडवांस जमा' : 'Deposit Paid'}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--bg-app)] text-[var(--muted)] border border-[var(--line)]">
+                          {lang === 'hi' ? 'लंबित' : 'Pending'}
+                        </span>
+                      )}
                     </td>
 
                     {/* Actions */}
                     <td className="py-3.5 px-5 text-right">
                       <button
                         onClick={() => handleDeleteItem(item.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                        className="p-1.5 text-[var(--muted)] hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
                         title={t.common.delete}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -399,107 +448,101 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
         </div>
       </div>
 
-      {/* Modal: Add New Budget Item */}
+      {/* Add Item Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#1A1D20]/75 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#FAF8F5] rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#D4AF37]/30 relative animate-in fade-in zoom-in-95 duration-150">
-            <h3 className="font-serif text-xl font-bold text-[#1A1D20] mb-1">{t.budget.addItem}</h3>
-            <p className="text-xs text-slate-500 mb-5">{t.budget.subtitle}</p>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[var(--surface)] text-[var(--ink)] max-w-md w-full rounded-3xl border border-[var(--line)] p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setShowAddModal(false)}
+              className="absolute top-5 right-5 text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-            <form onSubmit={handleAddItem} className="space-y-4">
+            <h3 className="font-serif text-xl font-bold mb-4">
+              {t.budget.addItem}
+            </h3>
+
+            <form onSubmit={handleAddItem} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-xs font-bold text-[#1A1D20] mb-1.5">
-                  {t.budget.category}
-                </label>
+                <label className="block font-semibold mb-1">{t.budget.category}</label>
                 <input
                   type="text"
                   required
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  placeholder="e.g. Traditional Dhol & Brass Band, Live Chaat Counter"
-                  className="w-full px-3.5 py-2.5 text-sm bg-white rounded-xl border border-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
+                  placeholder="e.g. Traditional Band & Dhol Players"
+                  className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] focus:outline-none focus:ring-1 focus:ring-[#b49a45]"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#1A1D20] mb-1.5">
-                    {t.budget.estimatedCost} ({currency})
-                  </label>
+                  <label className="block font-semibold mb-1">{t.budget.estimatedCost} ({currency})</label>
                   <input
                     type="number"
                     value={newItemEst}
                     onChange={(e) => setNewItemEst(e.target.value)}
-                    placeholder="25000"
-                    className="w-full px-3 py-2 text-sm font-mono tabular-nums bg-white rounded-xl border border-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
+                    placeholder="50000"
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] font-mono"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-[#1A1D20] mb-1.5">
-                    {t.budget.actualCost} ({currency})
-                  </label>
+                  <label className="block font-semibold mb-1">{t.budget.actualCost} ({currency})</label>
                   <input
                     type="number"
                     value={newItemAct}
                     onChange={(e) => setNewItemAct(e.target.value)}
-                    placeholder="23000"
-                    className="w-full px-3 py-2 text-sm font-mono tabular-nums font-bold text-[#1A1D20] bg-white rounded-xl border border-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
+                    placeholder="45000"
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] font-mono"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#1A1D20] mb-1.5">
-                    {t.budget.advancePaid} ({currency})
-                  </label>
+                  <label className="block font-semibold mb-1">{t.budget.advancePaid} ({currency})</label>
                   <input
                     type="number"
                     value={newItemAdv}
                     onChange={(e) => setNewItemAdv(e.target.value)}
-                    placeholder="10000"
-                    className="w-full px-3 py-2 text-sm font-mono tabular-nums text-[#1B4332] bg-white rounded-xl border border-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-[#1B4332]/30 focus:border-[#1B4332]"
+                    placeholder="15000"
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] font-mono"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-[#1A1D20] mb-1.5">
-                    {t.budget.balanceDueDate}
-                  </label>
+                  <label className="block font-semibold mb-1">{t.budget.balanceDueDate}</label>
                   <input
                     type="date"
                     value={newItemDue}
                     onChange={(e) => setNewItemDue(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono bg-white rounded-xl border border-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1A1D20] mb-1.5">
-                  {t.common.notes} ({t.common.optional})
-                </label>
+                <label className="block font-semibold mb-1">{t.common.notes}</label>
                 <input
                   type="text"
                   value={newItemNotes}
                   onChange={(e) => setNewItemNotes(e.target.value)}
-                  placeholder="e.g., includes sound technician & generator fuel"
-                  className="w-full px-3.5 py-2 text-xs bg-white rounded-xl border border-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
+                  placeholder="e.g. 50% advance given on booking receipt"
+                  className="w-full px-3 py-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="pt-3 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900"
+                  className="px-4 py-2 rounded-xl border border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)] font-semibold cursor-pointer"
                 >
                   {t.common.cancel}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-[#1A1D20] hover:bg-[#2A2F35] rounded-xl shadow-xs border border-[#D4AF37]/30"
+                  className="px-5 py-2 rounded-xl bg-[#1c5340] hover:bg-[#164233] text-white font-bold transition-all shadow-sm cursor-pointer"
                 >
                   {t.common.add}
                 </button>

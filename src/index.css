@@ -2,36 +2,77 @@
 
 @layer base {
   :root {
-    --gold: #D4AF37;
-    --gold-hover: #C29D2C;
-    --gold-light: #FBF8EE;
-    --gold-border: #E8DEBE;
-    --charcoal: #1A1D20;
-    --charcoal-subtle: #2A2F35;
-    --linen: #FBF9F5;
-    --linen-surface: #FFFFFF;
-    --emerald-deep: #1B4332;
-    --emerald-light: #EBF5F0;
+    --bg-landing: #fffdf9;
+    --bg-app: #f8f3ea;
+    --surface: #ffffff;
+    --surface-card: #fffdf8;
+    --ink: #23201b;
+    --ink-secondary: #2a2418;
+    --muted: #6f675a;
+    --line: #e6dcc8;
+    --line-subtle: #efe7d7;
+    --gold: #b49a45;
+    --gold-app: #b78f3b;
+    --gold-hover: #c8a94b;
+    --gold-light: #fdfaf2;
+    --emerald-dark: #12392d;
+    --emerald-deep: #0c2a21;
+    --emerald-btn: #1c5340;
+    --emerald-btn-hover: #164233;
+    --rose-bg: #f1dcd3;
+    --rose-ink: #7a3a24;
+    --warn: #a5562a;
+    --night: #0d1220;
+  }
+
+  [data-theme="dark"] {
+    --bg-landing: #13110d;
+    --bg-app: #14120f;
+    --surface: #1d1a15;
+    --surface-card: #221e18;
+    --ink: #f3ecdc;
+    --ink-secondary: #ede5d5;
+    --muted: #a79d89;
+    --line: #3a3327;
+    --line-subtle: #2d271e;
+    --gold: #c8a94b;
+    --gold-app: #c8a94b;
+    --gold-hover: #dbbd5f;
+    --gold-light: #242017;
+    --emerald-dark: #0f2c23;
+    --emerald-deep: #081d17;
+    --emerald-btn: #1c5340;
+    --emerald-btn-hover: #23674f;
+    --rose-bg: #3a2a24;
+    --rose-ink: #f3c4b5;
+    --warn: #d97736;
+    --night: #080b14;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #1A1D20;
-    background-color: #F8F6F1;
+    font-family: 'Jost', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background-color: var(--bg-landing);
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   h1, h2, h3, .font-serif {
-    font-family: 'Playfair Display', 'Noto Serif Devanagari', Georgia, serif;
+    font-family: 'Cormorant Garamond', 'Noto Serif Devanagari', 'Playfair Display', Georgia, serif;
   }
 
   .font-sans {
-    font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+    font-family: 'Jost', 'Noto Sans Devanagari', system-ui, sans-serif;
   }
 
   .font-mono, .tabular-nums {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-variant-numeric: tabular-nums;
   }
+}
+
+/* Monogram ring custom shadow specified in Section 3.3 */
+.hm-monogram {
+  box-shadow: 0 0 0 2.5px var(--surface), 0 0 0 4px var(--gold);
 }
 
 @media print {

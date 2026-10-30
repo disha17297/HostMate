@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { LandingPage } from './components/LandingPage';
 import { SetupWizardModal } from './components/SetupWizardModal';
 import { BudgetTracker } from './components/BudgetTracker';
 import { MilestoneTimeline } from './components/MilestoneTimeline';
@@ -13,7 +14,8 @@ import {
   getStoredEvents, 
   saveActiveEvent, 
   getActiveEventId, 
-  setActiveEventId 
+  setActiveEventId,
+  formatCurrency 
 } from './utils/storage';
 import { 
   Sparkles, 
@@ -26,13 +28,28 @@ import {
   ChevronRight,
   TrendingUp,
   ShieldCheck,
-  Compass
+  Compass,
+  ArrowLeft
 } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState<Language>(() => {
     const saved = localStorage.getItem('hostmate_lang');
     return saved === 'hi' ? 'hi' : 'en';
+  });
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('hostmate_theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  // Dual view mode: 'landing' (Marketing site) or 'planner' (Interactive workspace)
+  const [viewMode, setViewMode] = useState<'landing' | 'planner'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('planner') || window.location.hash === '#planner') return 'planner';
+    const saved = localStorage.getItem('hostmate_view_mode');
+    return saved === 'planner' ? 'planner' : 'landing';
   });
 
   const [allEvents, setAllEvents] = useState<EventData[]>([]);
@@ -47,6 +64,12 @@ export default function App() {
 
   // Standalone RSVP view mode (when query param ?rsvp=... is present or user clicked preview)
   const [publicRsvpMode, setPublicRsvpMode] = useState(false);
+
+  // Sync theme to root attribute
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('hostmate_theme', theme);
+  }, [theme]);
 
   // Load events on mount
   useEffect(() => {
@@ -76,6 +99,16 @@ export default function App() {
     localStorage.setItem('hostmate_lang', nextLang);
   };
 
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  const handleSwitchView = (mode: 'landing' | 'planner') => {
+    setViewMode(mode);
+    localStorage.setItem('hostmate_view_mode', mode);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const activeEvent = allEvents.find((e) => e.id === activeEventId) || allEvents[0] || null;
 
   const handleSelectEvent = (id: string) => {
@@ -93,6 +126,7 @@ export default function App() {
     setAllEvents(newEvents);
     setActiveEventIdState(newEvent.id);
     setCurrentTab('budget');
+    handleSwitchView('planner');
   };
 
   // RSVP submission from guest public form
@@ -135,82 +169,117 @@ export default function App() {
     daysLeft = Math.ceil((eventD.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   }
 
+  // VIEW 1: Marketing Landing Page
+  if (viewMode === 'landing') {
+    return (
+      <>
+        <LandingPage
+          lang={lang}
+          onToggleLang={handleToggleLang}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+          onOpenPlanner={(tab?: string) => {
+            if (tab) setCurrentTab(tab);
+            handleSwitchView('planner');
+          }}
+          onPlanEvent={() => {
+            setShowWizard(true);
+          }}
+        />
+
+        {/* Smart Setup Wizard Modal directly accessible from Landing */}
+        <SetupWizardModal
+          isOpen={showWizard}
+          onClose={() => setShowWizard(false)}
+          lang={lang}
+          onComplete={handleWizardComplete}
+          existingEvent={activeEvent}
+        />
+      </>
+    );
+  }
+
+  // VIEW 2: Planner App Workspace
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#1A1D20] flex flex-col antialiased">
-      {/* 3-Zone Top Navigation Bar */}
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--ink)] flex flex-col antialiased transition-colors duration-200">
+      {/* 5.1 Two-Row App Header */}
       <Header
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         lang={lang}
         onToggleLang={handleToggleLang}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         activeEvent={activeEvent}
         allEvents={allEvents}
         onSelectEvent={handleSelectEvent}
         onOpenWizard={() => setShowWizard(true)}
+        onGoToLanding={() => handleSwitchView('landing')}
       />
 
       {/* Main Workspace Body */}
       {activeEvent ? (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          {/* Executive Hero Event Strip */}
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* 5.2 Event Summary Card */}
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--line)] p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
             <div className="flex items-center gap-4">
-              <div className="w-13 h-13 rounded-2xl bg-[#1A1D20] border border-[#D4AF37]/40 text-[#D4AF37] flex items-center justify-center font-bold text-2xl shrink-0 shadow-xs">
+              {/* Round rose icon */}
+              <div className="w-13 h-13 rounded-full bg-[var(--rose-bg)] text-[var(--rose-ink)] border border-[var(--rose-ink)]/20 flex items-center justify-center font-bold text-2xl shrink-0 shadow-2xs">
                 {activeEvent.type === 'wedding' ? '💍' : activeEvent.type === 'birthday' ? '🎂' : '🎪'}
               </div>
               <div>
                 <div className="flex items-center gap-2.5">
-                  <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#1A1D20] tracking-tight">
+                  <h1 className="text-xl sm:text-2xl font-serif font-bold text-[var(--ink)] tracking-tight">
                     {activeEvent.title}
                   </h1>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-[#D4AF37]/15 text-[#8F741C] border border-[#D4AF37]/30 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-[#b49a45]/15 text-[#8a7226] border border-[#b49a45]/30 px-2.5 py-0.5 rounded-full">
                     {activeEvent.type}
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-[#1A1D20]/65 mt-1.5">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--muted)] mt-1.5">
                   <span className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <strong className="text-[#1A1D20]">{activeEvent.date}</strong>
+                    <Calendar className="w-3.5 h-3.5 text-[#b49a45]" />
+                    <strong className="text-[var(--ink)]">{activeEvent.date}</strong>
                     {daysLeft > 0 ? (
-                      <span className="text-[#8F741C] font-semibold font-mono tabular-nums">
+                      <span className="text-[#8a7226] font-semibold font-mono tabular-nums">
                         ({daysLeft} {t.common.daysLeft})
                       </span>
                     ) : (
-                      <span className="text-[#1B4332] font-semibold">({lang === 'hi' ? 'आज / संपन्न' : 'Today / Completed'})</span>
+                      <span className="text-[#1c5340] font-semibold">({lang === 'hi' ? 'आज / संपन्न' : 'Today / Completed'})</span>
                     )}
                   </span>
-                  <span className="text-[#E2E8F0]">•</span>
+                  <span className="text-[var(--line)]">•</span>
                   <span className="flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <strong className="font-mono tabular-nums text-[#1A1D20]">{activeEvent.guestCount}</strong> {t.common.guests}
+                    <Users className="w-3.5 h-3.5 text-[#b49a45]" />
+                    <strong className="font-mono tabular-nums text-[var(--ink)]">{activeEvent.guestCount}</strong> {t.common.guests}
                   </span>
-                  <span className="text-[#E2E8F0]">•</span>
+                  <span className="text-[var(--line)]">•</span>
                   <span className="flex items-center gap-1.5">
-                    <Wallet className="w-3.5 h-3.5 text-[#D4AF37]" />
+                    <Wallet className="w-3.5 h-3.5 text-[#b49a45]" />
                     <span>{lang === 'hi' ? 'कुल बजट' : 'Total Budget'}:</span>
-                    <strong className="font-mono tabular-nums text-[#1A1D20]">
-                      {activeEvent.currency} {activeEvent.totalBudget.toLocaleString()}
+                    <strong className="font-mono tabular-nums text-[var(--ink)]">
+                      {formatCurrency(activeEvent.totalBudget, activeEvent.currency)}
                     </strong>
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Quick Action Concierge Badges */}
+            {/* Quick Action Concierge Buttons */}
             <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0">
               <button
                 onClick={() => setPublicRsvpMode(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#1B4332] hover:bg-[#1B4332]/90 text-white border border-[#1B4332] transition-colors shadow-xs cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#1c5340] hover:bg-[#164233] text-white border border-[#1c5340] transition-colors shadow-2xs cursor-pointer"
               >
-                <MessageCircle className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <MessageCircle className="w-3.5 h-3.5 text-[#ffd97d]" />
                 <span>{lang === 'hi' ? 'RSVP लिंक टेस्ट करें' : 'Preview Guest RSVP'}</span>
               </button>
 
               <button
                 onClick={() => handleOpenAiModal('ideas')}
-                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#1A1D20] hover:bg-[#1A1D20]/90 text-white border border-[#D4AF37]/40 transition-colors shadow-xs cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#12100d] hover:bg-[#23201b] text-white border border-[#b49a45]/40 transition-colors shadow-2xs cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <Sparkles className="w-3.5 h-3.5 text-[#ffd97d]" />
                 <span>{lang === 'hi' ? 'एआई विचार' : 'AI Ideas'}</span>
               </button>
             </div>
@@ -253,39 +322,39 @@ export default function App() {
           )}
 
           {currentTab === 'aiAdvisor' && (
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-8 text-center space-y-4 shadow-xs">
-              <div className="w-14 h-14 bg-[#1A1D20] text-[#D4AF37] rounded-2xl flex items-center justify-center mx-auto shadow-xs border border-[#D4AF37]/30">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--line)] p-8 text-center space-y-4 shadow-xs">
+              <div className="w-14 h-14 bg-[#12100d] text-[#b49a45] rounded-2xl flex items-center justify-center mx-auto shadow-xs border border-[#b49a45]/30">
                 <Sparkles className="w-7 h-7" />
               </div>
-              <h2 className="text-2xl font-serif font-bold text-[#1A1D20]">{t.aiAdvisor.title}</h2>
-              <p className="text-xs text-[#1A1D20]/65 max-w-md mx-auto">{t.aiAdvisor.tagline}</p>
+              <h2 className="text-2xl font-serif font-bold text-[var(--ink)]">{t.aiAdvisor.title}</h2>
+              <p className="text-xs text-[var(--muted)] max-w-md mx-auto">{t.aiAdvisor.tagline}</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-xl mx-auto pt-3">
                 <button
                   onClick={() => handleOpenAiModal('budget')}
-                  className="p-4 rounded-xl border border-[#E2E8F0] hover:border-[#D4AF37] hover:bg-[#FAF8F5] text-left transition-all group cursor-pointer bg-white"
+                  className="p-4 rounded-xl border border-[var(--line)] hover:border-[#b49a45] hover:bg-[var(--bg-app)] text-left transition-all group cursor-pointer bg-[var(--surface)]"
                 >
-                  <Wallet className="w-5 h-5 text-[#D4AF37] mb-2 group-hover:scale-110 transition-transform" />
-                  <div className="font-semibold text-xs text-[#1A1D20]">{t.aiAdvisor.tabBudget}</div>
-                  <div className="text-[10px] text-[#1A1D20]/60 mt-0.5">Audit caps & save costs</div>
+                  <Wallet className="w-5 h-5 text-[#b49a45] mb-2 group-hover:scale-110 transition-transform" />
+                  <div className="font-semibold text-xs text-[var(--ink)]">{t.aiAdvisor.tabBudget}</div>
+                  <div className="text-[10px] text-[var(--muted)] mt-0.5">Audit caps & save costs</div>
                 </button>
 
                 <button
                   onClick={() => handleOpenAiModal('ideas')}
-                  className="p-4 rounded-xl border border-[#E2E8F0] hover:border-[#D4AF37] hover:bg-[#FAF8F5] text-left transition-all group cursor-pointer bg-white"
+                  className="p-4 rounded-xl border border-[var(--line)] hover:border-[#b49a45] hover:bg-[var(--bg-app)] text-left transition-all group cursor-pointer bg-[var(--surface)]"
                 >
-                  <Sparkles className="w-5 h-5 text-[#D4AF37] mb-2 group-hover:scale-110 transition-transform" />
-                  <div className="font-semibold text-xs text-[#1A1D20]">{t.aiAdvisor.tabIdeas}</div>
-                  <div className="text-[10px] text-[#1A1D20]/60 mt-0.5">Themes, decor & twists</div>
+                  <Sparkles className="w-5 h-5 text-[#b49a45] mb-2 group-hover:scale-110 transition-transform" />
+                  <div className="font-semibold text-xs text-[var(--ink)]">{t.aiAdvisor.tabIdeas}</div>
+                  <div className="text-[10px] text-[var(--muted)] mt-0.5">Themes, decor & twists</div>
                 </button>
 
                 <button
                   onClick={() => handleOpenAiModal('vendor')}
-                  className="p-4 rounded-xl border border-[#E2E8F0] hover:border-[#D4AF37] hover:bg-[#FAF8F5] text-left transition-all group cursor-pointer bg-white"
+                  className="p-4 rounded-xl border border-[var(--line)] hover:border-[#b49a45] hover:bg-[var(--bg-app)] text-left transition-all group cursor-pointer bg-[var(--surface)]"
                 >
-                  <CheckCircle2 className="w-5 h-5 text-[#1B4332] mb-2 group-hover:scale-110 transition-transform" />
-                  <div className="font-semibold text-xs text-[#1A1D20]">{t.aiAdvisor.tabVendor}</div>
-                  <div className="text-[10px] text-[#1A1D20]/60 mt-0.5">Contract & clauses review</div>
+                  <CheckCircle2 className="w-5 h-5 text-[#1c5340] mb-2 group-hover:scale-110 transition-transform" />
+                  <div className="font-semibold text-xs text-[var(--ink)]">{t.aiAdvisor.tabVendor}</div>
+                  <div className="text-[10px] text-[var(--muted)] mt-0.5">Contract & clauses review</div>
                 </button>
               </div>
             </div>
@@ -293,17 +362,17 @@ export default function App() {
         </main>
       ) : (
         <div className="flex-1 flex items-center justify-center p-6">
-          <div className="text-center space-y-3 bg-white p-8 rounded-2xl border border-[#E2E8F0] max-w-md shadow-xs">
-            <div className="w-12 h-12 rounded-xl bg-[#1A1D20] text-[#D4AF37] flex items-center justify-center mx-auto border border-[#D4AF37]/30">
+          <div className="text-center space-y-3 bg-[var(--surface)] p-8 rounded-2xl border border-[var(--line)] max-w-md shadow-xs">
+            <div className="w-12 h-12 rounded-xl bg-[#12100d] text-[#b49a45] flex items-center justify-center mx-auto border border-[#b49a45]/30">
               <Compass className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-serif font-bold text-[#1A1D20]">Welcome to HostMate</h2>
-            <p className="text-xs text-[#1A1D20]/65 italic">
+            <h2 className="text-xl font-serif font-bold text-[var(--ink)]">Welcome to HostMate</h2>
+            <p className="text-xs text-[var(--muted)] italic">
               {lang === 'hi' ? 'बजट सही, इवेंट हिट!' : 'Budget fit, event hit!'}
             </p>
             <button
               onClick={() => setShowWizard(true)}
-              className="mt-2 px-5 py-2.5 text-xs font-semibold text-white bg-[#1A1D20] hover:bg-[#1A1D20]/90 rounded-xl shadow-xs border border-[#D4AF37]/40 cursor-pointer"
+              className="mt-2 px-5 py-2.5 text-xs font-semibold text-white bg-[#1c5340] hover:bg-[#164233] rounded-xl shadow-xs border border-[#1c5340] cursor-pointer"
             >
               Start Smart Setup Wizard
             </button>

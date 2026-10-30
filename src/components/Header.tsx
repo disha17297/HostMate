@@ -37,10 +37,17 @@ export const Header: React.FC<HeaderProps> = ({
 
   const navItems = [
     { id: 'budget', label: t.nav.budget },
+    { id: 'subEvents', label: t.nav.subEvents },
+    { id: 'seating', label: t.nav.seating },
     { id: 'tasks', label: t.nav.tasks },
     { id: 'rsvp', label: t.nav.rsvp },
+    { id: 'microsite', label: t.nav.microsite },
+    { id: 'liveWall', label: t.nav.liveWall },
     { id: 'vendors', label: t.nav.vendors },
     { id: 'aiAdvisor', label: t.nav.aiAdvisor },
+    { id: 'vault', label: t.nav.vault },
+    { id: 'ecoHost', label: t.nav.ecoHost },
+    { id: 'pro', label: t.nav.pro },
   ];
 
   return (

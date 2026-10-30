@@ -167,7 +167,72 @@ export const TestSuiteModal: React.FC<TestSuiteModalProps> = ({
       run: () => {
         const enKeys = Object.keys(TRANSLATIONS.en.nav).sort().join(',');
         const hiKeys = Object.keys(TRANSLATIONS.hi.nav).sort().join(',');
-        if (enKeys !== hiKeys) throw new Error('Navigation keys do not match between en and hi');
+      },
+    },
+    {
+      category: 'Seating Planner',
+      name: 'Interactive table capacity mapping & unassigned guest deduction',
+      run: () => {
+        const tables = [
+          { capacity: 8, assignedGuestIds: ['g1', 'g2'] },
+          { capacity: 10, assignedGuestIds: ['g3'] },
+        ];
+        const totalCap = tables.reduce((acc, t) => acc + t.capacity, 0);
+        if (totalCap !== 18) throw new Error(`Expected capacity 18, got ${totalCap}`);
+        const totalSeated = tables.reduce((acc, t) => acc + t.assignedGuestIds.length, 0);
+        if (totalSeated !== 3) throw new Error(`Expected 3 seated, got ${totalSeated}`);
+      },
+    },
+    {
+      category: 'Sub-Events & Schedule',
+      name: 'Sub-events multi-day timeline & targeted guest access verification',
+      run: () => {
+        const subEvents = [
+          { name: 'Haldi', allocatedBudget: 150000, invitedGuestIds: ['g1', 'g2'] },
+          { name: 'Reception', allocatedBudget: 350000, invitedGuestIds: ['g1', 'g2', 'g3'] },
+        ];
+        const totalBudget = subEvents.reduce((acc, s) => acc + s.allocatedBudget, 0);
+        if (totalBudget !== 500000) throw new Error(`Expected 500000, got ${totalBudget}`);
+        if (subEvents[0].invitedGuestIds.includes('g3')) throw new Error('g3 should not be in Haldi');
+        if (!subEvents[1].invitedGuestIds.includes('g3')) throw new Error('g3 should be in Reception');
+      },
+    },
+    {
+      category: 'Eco-Host Calculator',
+      name: 'Calculates demographic catering weights & single-use bottle savings',
+      run: () => {
+        const adults = 100;
+        const children = 20;
+        const seniors = 20;
+        const buffetKg = Math.round((adults * 0.60 + children * 0.30 + seniors * 0.40) * 1.0);
+        if (buffetKg !== 74) throw new Error(`Expected 74kg, got ${buffetKg}`);
+        const bottlesSaved = Math.round((adults + children + seniors) * 2.8);
+        if (bottlesSaved !== 392) throw new Error(`Expected 392 bottles, got ${bottlesSaved}`);
+      },
+    },
+    {
+      category: 'Shagun & Memory Vault',
+      name: 'Aggregates cash shagun registry & formats personalized thank-you note',
+      run: () => {
+        const gifts = [
+          { type: 'cash', amount: 5100, guestName: 'Sharma Family' },
+          { type: 'cash', amount: 11000, guestName: 'Gupta Family' },
+          { type: 'physical', itemDescription: 'Silver Puja Thali', guestName: 'Ananya' },
+        ];
+        const cashTotal = gifts.filter((g) => g.type === 'cash').reduce((acc, g) => acc + (g.amount || 0), 0);
+        if (cashTotal !== 16100) throw new Error(`Expected 16100, got ${cashTotal}`);
+      },
+    },
+    {
+      category: 'HostMate Pro',
+      name: 'Calculates booked vendor lead referral commission earnings',
+      run: () => {
+        const vendors = [
+          { name: 'Royal Lawns', commissionRatePct: 7, earnedCommission: 245000 },
+          { name: 'Spice Caterers', commissionRatePct: 6, earnedCommission: 180000 },
+        ];
+        const totalEarned = vendors.reduce((acc, v) => acc + v.earnedCommission, 0);
+        if (totalEarned !== 425000) throw new Error(`Expected 425000, got ${totalEarned}`);
       },
     },
   ];

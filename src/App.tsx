@@ -9,6 +9,14 @@ import { RsvpPublicView } from './components/RsvpPublicView';
 import { VendorHub } from './components/VendorHub';
 import { AiAdviceModal } from './components/AiAdviceModal';
 import { TestSuiteModal } from './components/TestSuiteModal';
+import { SeatingPlanner } from './components/SeatingPlanner';
+import { SubEventsManager } from './components/SubEventsManager';
+import { DigitalInvitesAndBroadcast } from './components/DigitalInvitesAndBroadcast';
+import { LivePhotoWall } from './components/LivePhotoWall';
+import { AiAssistantExpanded } from './components/AiAssistantExpanded';
+import { ProAgencyHub } from './components/ProAgencyHub';
+import { MemoryShagunVault } from './components/MemoryShagunVault';
+import { EcoHostCalculator } from './components/EcoHostCalculator';
 import { EventData, Language, Vendor, GuestRsvp } from './types';
 import { TRANSLATIONS } from './data/translations';
 import { 
@@ -323,6 +331,37 @@ export default function App() {
             />
           )}
 
+          {currentTab === 'subEvents' && (
+            <SubEventsManager
+              event={activeEvent}
+              onUpdateEvent={handleUpdateActiveEvent}
+              lang={lang}
+            />
+          )}
+
+          {currentTab === 'seating' && (
+            <SeatingPlanner
+              event={activeEvent}
+              onUpdateEvent={handleUpdateActiveEvent}
+              lang={lang}
+            />
+          )}
+
+          {currentTab === 'microsite' && (
+            <DigitalInvitesAndBroadcast
+              event={activeEvent}
+              lang={lang}
+            />
+          )}
+
+          {currentTab === 'liveWall' && (
+            <LivePhotoWall
+              event={activeEvent}
+              onUpdateEvent={handleUpdateActiveEvent}
+              lang={lang}
+            />
+          )}
+
           {currentTab === 'vendors' && (
             <VendorHub
               event={activeEvent}
@@ -333,42 +372,37 @@ export default function App() {
           )}
 
           {currentTab === 'aiAdvisor' && (
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--line)] p-8 text-center space-y-4 shadow-xs">
-              <div className="w-14 h-14 bg-[#12100d] text-[#b49a45] rounded-2xl flex items-center justify-center mx-auto shadow-xs border border-[#b49a45]/30">
-                <Sparkles className="w-7 h-7" />
-              </div>
-              <h2 className="text-2xl font-serif font-bold text-[var(--ink)]">{t.aiAdvisor.title}</h2>
-              <p className="text-xs text-[var(--muted)] max-w-md mx-auto">{t.aiAdvisor.tagline}</p>
+            <AiAssistantExpanded
+              event={activeEvent}
+              lang={lang}
+              onOpenCoreAiModal={() => setShowAiModal(true)}
+            />
+          )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-xl mx-auto pt-3">
-                <button
-                  onClick={() => handleOpenAiModal('budget')}
-                  className="p-4 rounded-xl border border-[var(--line)] hover:border-[#b49a45] hover:bg-[var(--bg-app)] text-left transition-all group cursor-pointer bg-[var(--surface)]"
-                >
-                  <Wallet className="w-5 h-5 text-[#b49a45] mb-2 group-hover:scale-110 transition-transform" />
-                  <div className="font-semibold text-xs text-[var(--ink)]">{t.aiAdvisor.tabBudget}</div>
-                  <div className="text-[10px] text-[var(--muted)] mt-0.5">Audit caps & save costs</div>
-                </button>
+          {currentTab === 'vault' && (
+            <MemoryShagunVault
+              event={activeEvent}
+              onUpdateEvent={handleUpdateActiveEvent}
+              lang={lang}
+            />
+          )}
 
-                <button
-                  onClick={() => handleOpenAiModal('ideas')}
-                  className="p-4 rounded-xl border border-[var(--line)] hover:border-[#b49a45] hover:bg-[var(--bg-app)] text-left transition-all group cursor-pointer bg-[var(--surface)]"
-                >
-                  <Sparkles className="w-5 h-5 text-[#b49a45] mb-2 group-hover:scale-110 transition-transform" />
-                  <div className="font-semibold text-xs text-[var(--ink)]">{t.aiAdvisor.tabIdeas}</div>
-                  <div className="text-[10px] text-[var(--muted)] mt-0.5">Themes, decor & twists</div>
-                </button>
+          {currentTab === 'ecoHost' && (
+            <EcoHostCalculator
+              event={activeEvent}
+              onUpdateEvent={handleUpdateActiveEvent}
+              lang={lang}
+            />
+          )}
 
-                <button
-                  onClick={() => handleOpenAiModal('vendor')}
-                  className="p-4 rounded-xl border border-[var(--line)] hover:border-[#b49a45] hover:bg-[var(--bg-app)] text-left transition-all group cursor-pointer bg-[var(--surface)]"
-                >
-                  <CheckCircle2 className="w-5 h-5 text-[#1c5340] mb-2 group-hover:scale-110 transition-transform" />
-                  <div className="font-semibold text-xs text-[var(--ink)]">{t.aiAdvisor.tabVendor}</div>
-                  <div className="text-[10px] text-[var(--muted)] mt-0.5">Contract & clauses review</div>
-                </button>
-              </div>
-            </div>
+          {currentTab === 'pro' && (
+            <ProAgencyHub
+              event={activeEvent}
+              allEvents={allEvents}
+              onSelectEvent={handleSelectEvent}
+              onUpdateEvent={handleUpdateActiveEvent}
+              lang={lang}
+            />
           )}
         </main>
       ) : (
